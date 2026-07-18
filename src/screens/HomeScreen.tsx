@@ -5,7 +5,7 @@ export default function HomeScreen() {
 
     return (
         <SafeAreaView>
-            <Text>Login Screen</Text>
+            <Text>Home Screen</Text>
         </SafeAreaView>
     )
 }
