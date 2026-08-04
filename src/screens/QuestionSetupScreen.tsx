@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Button } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Category, Difficulty } from '../types/questionTypes';
 import { generateQuestionRequest } from '../services/questionApi';
 import { AppStackParamList } from '../navigation/Types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ActivityIndicator } from 'react-native';
 
 const CATEGORIES: Category[] = ['React', 'Node', 'JavaScript', 'HR', 'SQL'];
 const DIFFICULTIES: Difficulty[] = ['Easy', 'Medium', 'Hard'];
@@ -64,15 +65,16 @@ export default function QuestionSetupScreen() {
           </TouchableOpacity>
         ))}
       </View>
-
       <TouchableOpacity
         style={[styles.generateButton, (!selectedCategory || !selectedDifficulty) && styles.generateButtonDisabled]}
         onPress={handleGenerate}
-        disabled={!selectedCategory || !selectedDifficulty}
+        disabled={!selectedCategory || !selectedDifficulty || isGenerating}
       >
-        <Text style={styles.generateButtonText}>
-          {isGenerating ? 'Generating...' : 'Generate Question'}
-        </Text>
+        {isGenerating ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.generateButtonText}>Generate Question</Text>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -14,6 +14,14 @@ export default function QuestionDisplayScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.badgeRow}>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{question.category}</Text>
+        </View>
+        <View style={[styles.badge, styles.difficultyBadge]}>
+          <Text style={styles.badgeText}>{question.difficulty}</Text>
+        </View>
+      </View>
       <Text style={styles.label}>Your Question</Text>
       <Text style={styles.question}>{question.content}</Text>
 
@@ -30,4 +38,8 @@ const styles = StyleSheet.create({
   question: { fontSize: 20, fontWeight: '600', lineHeight: 28 },
   button: { marginTop: 32, backgroundColor: '#333', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#fff', fontWeight: '600' },
+  badgeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  badge: { backgroundColor: '#333', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12 },
+  difficultyBadge: { backgroundColor: '#666' },
+  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 });
