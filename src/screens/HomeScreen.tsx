@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../navigation/Types';
+import AppHeader from '../components/AppHeader';
 
 type HomeNavProp = NativeStackNavigationProp<AppStackParamList, 'Home'>;
 
@@ -15,6 +16,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBar}>
         <View>
+          <AppHeader/>
           <Text style={styles.eyebrow}>Welcome back</Text>
           <Text style={styles.title}>Ready to practice?</Text>
         </View>
@@ -30,14 +32,13 @@ export default function HomeScreen() {
 
       <View style={styles.centerArea}>
         <TouchableOpacity
-          style={styles.heroCard}
+          style={styles.primaryButton}
           onPress={() => navigation.navigate('QuestionSetup')}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
         >
-          <Text style={styles.heroIcon}>✦</Text>
-          <Text style={styles.heroTitle}>New Question</Text>
-          <Text style={styles.heroSubtitle}>Start an AI-generated interview question</Text>
+          <Text style={styles.primaryButtonText}>New Question</Text>
         </TouchableOpacity>
+        <Text style={styles.helperText}>Start an AI-generated interview question</Text>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={() => logout()} activeOpacity={0.6}>
@@ -77,19 +78,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  heroCard: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 20,
-    paddingVertical: 40,
     paddingHorizontal: 32,
-    alignItems: 'center',
-    width: '100%',
   },
-  heroIcon: { fontSize: 30, color: '#FFD60A', marginBottom: 14 },
-  heroTitle: { fontSize: 23, fontWeight: '700', color: '#FFFFFF', marginBottom: 6 },
-  heroSubtitle: { fontSize: 14, color: '#AEAEB2', textAlign: 'center' },
+  primaryButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    width: '100%',
+    alignItems: 'center',
+  },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '600' },
+  helperText: { fontSize: 13, color: '#8E8E93', marginTop: 12, textAlign: 'center' },
   logoutButton: {
     paddingVertical: 16,
     alignItems: 'center',
