@@ -4,7 +4,7 @@ import HomeScreen from '../screens/HomeScreen';
 import QuestionSetupScreen from '../screens/QuestionSetupScreen';
 import QuestionDisplayScreen from '../screens/QuestionDisplayScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
-
+import HistoryScreen from '../screens/HistoryScreen';
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export default function AppStack() {
@@ -14,6 +14,7 @@ export default function AppStack() {
       <Stack.Screen name="QuestionSetup" component={QuestionSetupScreen} options={{ title: 'New Question' }} />
       <Stack.Screen name="QuestionDisplay" component={QuestionDisplayScreen} options={{ title: 'Interview Question' }} />
       <Stack.Screen name="FeedbackScreen" component={FeedbackScreen} options={{ title: 'Feedback' }} />
+      <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'History' }} />  
     </Stack.Navigator>
   );
 }

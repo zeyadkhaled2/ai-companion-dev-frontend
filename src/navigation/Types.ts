@@ -1,5 +1,5 @@
 import { Question } from "../types/questionTypes";
-import { Attempt } from "../types/attemptType";
+import { Attempt } from "../types/attemptTypes";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -11,4 +11,5 @@ export type AppStackParamList = {
   QuestionSetup: undefined;
   QuestionDisplay: { question: Question };
   FeedbackScreen: { attempt: Attempt };
+  History: undefined;
 };
