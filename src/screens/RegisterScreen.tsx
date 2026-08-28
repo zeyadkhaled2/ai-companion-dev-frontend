@@ -9,6 +9,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../navigation/Types';
 import AppHeader from '../components/AppHeader';
+import { useTheme } from '../hooks/useTheme';
+import { Theme } from '../constants/theme';
 
 type RegisterScreenNavProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -20,6 +22,8 @@ export default function RegisterScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const navigation = useNavigation<RegisterScreenNavProp>();
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const onSubmit = async (data: RegisterFormData) => {
     setServerError(null);
@@ -35,13 +39,10 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <AppHeader/>
+            <AppHeader />
             <Text style={styles.eyebrow}>Get started</Text>
             <Text style={styles.title}>Create Account</Text>
           </View>
@@ -56,7 +57,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={[styles.input, errors.name && styles.inputError]}
                     placeholder="Your name"
-                    placeholderTextColor="#AEAEB2"
+                    placeholderTextColor={theme.placeholder}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -76,7 +77,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={[styles.input, errors.email && styles.inputError]}
                     placeholder="you@example.com"
-                    placeholderTextColor="#AEAEB2"
+                    placeholderTextColor={theme.placeholder}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -97,7 +98,7 @@ export default function RegisterScreen() {
                   <TextInput
                     style={[styles.input, errors.password && styles.inputError]}
                     placeholder="••••••••"
-                    placeholderTextColor="#AEAEB2"
+                    placeholderTextColor={theme.placeholder}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -111,24 +112,13 @@ export default function RegisterScreen() {
 
             {serverError && <Text style={styles.serverError}>{serverError}</Text>}
 
-            <TouchableOpacity
-              style={[styles.button, isSubmitting && styles.buttonDisabled]}
-              onPress={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
-              activeOpacity={0.85}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>Create Account</Text>
-              )}
+            <TouchableOpacity style={[styles.button, isSubmitting && styles.buttonDisabled]} onPress={handleSubmit(onSubmit)} disabled={isSubmitting} activeOpacity={0.85}>
+              {isSubmitting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.buttonText}>Create Account</Text>}
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.footer}>
-            <Text style={styles.footerText}>
-              Already have an account? <Text style={styles.footerLink}>Log In</Text>
-            </Text>
+            <Text style={styles.footerText}>Already have an account? <Text style={styles.footerLink}>Log In</Text></Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -136,41 +126,26 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F2F2F7' },
-  flex: { flex: 1 },
-  container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  header: { marginBottom: 32 },
-  eyebrow: { fontSize: 15, color: '#8E8E93', marginBottom: 2 },
-  title: { fontSize: 30, fontWeight: '700', color: '#000' },
-  form: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-  },
-  field: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: '#3C3C43', marginBottom: 6 },
-  input: {
-    backgroundColor: '#F2F2F7',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#000',
-  },
-  inputError: { borderWidth: 1, borderColor: '#FF3B30' },
-  errorText: { color: '#FF3B30', fontSize: 12, marginTop: 4 },
-  serverError: { color: '#FF3B30', fontSize: 13, marginBottom: 12, textAlign: 'center' },
-  button: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
-  footer: { marginTop: 24, alignItems: 'center' },
-  footerText: { fontSize: 14, color: '#8E8E93' },
-  footerLink: { color: '#1C1C1E', fontWeight: '600' },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: theme.background },
+    flex: { flex: 1 },
+    container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
+    header: { marginBottom: 32 },
+    eyebrow: { fontSize: 15, color: theme.textSecondary, marginBottom: 2 },
+    title: { fontSize: 30, fontWeight: '700', color: theme.text },
+    form: { backgroundColor: theme.card, borderRadius: 16, padding: 20 },
+    field: { marginBottom: 16 },
+    label: { fontSize: 13, fontWeight: '600', color: theme.labelSecondary, marginBottom: 6 },
+    input: { backgroundColor: theme.inputBackground, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: theme.text },
+    inputError: { borderWidth: 1, borderColor: theme.danger },
+    errorText: { color: theme.danger, fontSize: 12, marginTop: 4 },
+    serverError: { color: theme.danger, fontSize: 13, marginBottom: 12, textAlign: 'center' },
+    button: { backgroundColor: theme.buttonDark, borderRadius: 10, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+    footer: { marginTop: 24, alignItems: 'center' },
+    footerText: { fontSize: 14, color: theme.textSecondary },
+    footerLink: { color: theme.text, fontWeight: '600' },
+  });
+}
