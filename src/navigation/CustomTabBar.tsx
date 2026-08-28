@@ -6,6 +6,7 @@ import { Theme } from '../constants/theme';
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   History: 'time-outline',
+  Dashboard: 'stats-chart-outline',
   Home: 'add',
   Account: 'person-outline',
 };
