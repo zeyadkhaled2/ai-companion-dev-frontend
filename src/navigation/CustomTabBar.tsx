@@ -8,6 +8,7 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   History: 'time-outline',
   Dashboard: 'stats-chart-outline',
   Home: 'add',
+  Chat: 'chatbubble-ellipses-outline',
   Account: 'person-outline',
 };
 

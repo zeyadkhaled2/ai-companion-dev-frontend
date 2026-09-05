@@ -4,10 +4,13 @@ import HistoryScreen from '../screens/HistoryScreen';
 import AccountScreen from '../screens/AccountScreen';
 import CustomTabBar from './CustomTabBar';
 import DashboardScreen from '../screens/DashboardScreen';
+import ChatScreen from '../screens/ChatScreen';
+
 export type MainTabsParamList = {
   History: undefined;
-  Home: undefined;
   Dashboard: undefined;
+  Home: undefined;
+  Chat: undefined;
   Account: undefined;
 };
 
@@ -22,6 +25,7 @@ export default function MainTabs() {
       <Tab.Screen name="History" component={HistoryScreen} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Chat" component={ChatScreen} />
       <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
