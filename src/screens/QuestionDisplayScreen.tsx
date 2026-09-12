@@ -7,6 +7,7 @@ import { AppStackParamList } from '../navigation/Types';
 import { submitAnswerRequest } from '../services/attemptApi';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../constants/theme';
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 
 type QuestionDisplayRouteProp = RouteProp<AppStackParamList, 'QuestionDisplay'>;
 type QuestionDisplayNavProp = NativeStackNavigationProp<AppStackParamList, 'QuestionDisplay'>;
@@ -41,26 +42,29 @@ export default function QuestionDisplayScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.question}>{question.content}</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.question}>{question.content}</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Type your answer here..."
-        placeholderTextColor={theme.placeholder}
-        multiline
-        numberOfLines={6}
-        value={userAnswer}
-        onChangeText={setUserAnswer}
-        textAlignVertical="top"
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Type your answer here..."
+          placeholderTextColor={theme.placeholder}
+          multiline
+          numberOfLines={6}
+          value={userAnswer}
+          onChangeText={setUserAnswer}
+          textAlignVertical="top"
+        />
 
-      {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={isSubmitting}>
-        {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Submit Answer</Text>}
-      </TouchableOpacity>
-    </SafeAreaView>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Submit Answer</Text>}
+        </TouchableOpacity>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
+
   );
 }
 
