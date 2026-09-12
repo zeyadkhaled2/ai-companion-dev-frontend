@@ -1,4 +1,5 @@
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet, Keyboard, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from '../hooks/useTheme';
@@ -15,6 +16,22 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  if (keyboardVisible) return null;
 
   return (
     <View style={styles.wrapper}>

@@ -18,7 +18,7 @@ export default function AppStack() {
         headerTintColor: theme.text,
       }}
     >
-      <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="Home" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="QuestionSetup" component={QuestionSetupScreen} options={{ title: 'New Question', headerBackTitle: '' }} />
       <Stack.Screen name="QuestionDisplay" component={QuestionDisplayScreen} options={{ title: 'Interview Question', headerBackTitle: '' }} />
       <Stack.Screen name="FeedbackScreen" component={FeedbackScreen} options={{ title: 'Feedback', headerBackTitle: '' }} />

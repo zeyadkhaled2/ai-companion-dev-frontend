@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sendMessageRequest } from '../services/chatApi';
 import { ChatMessage } from '../types/chatTypes';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../constants/theme';
 import AppHeader from '../components/AppHeader';
+import TypingIndicator from '../components/TypingIndicator';
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -15,6 +16,20 @@ export default function ChatScreen() {
   const theme = useTheme();
   const styles = createStyles(theme);
 
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
   const handleSend = async () => {
     const trimmed = inputText.trim();
     if (trimmed.length === 0 || isSending) return;
@@ -51,25 +66,29 @@ export default function ChatScreen() {
         <Text style={styles.title}>Mentor Chat</Text>
       </View>
 
-      <FlatList
-        data={messages}
-        inverted
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messageList}
-        renderItem={({ item }) => (
-          <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.aiBubble]}>
-            <Text style={item.role === 'user' ? styles.userText : styles.aiText}>{item.content}</Text>
-          </View>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Ask me anything about interview prep, coding concepts, or debugging!</Text>
-          </View>
-        }
-      />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <FlatList
+          data={messages}
+          inverted
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messageList}
+          ListHeaderComponent={isSending ? <TypingIndicator /> : null}
+          renderItem={({ item }) => (
+            <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.aiBubble]}>
+              <Text style={item.role === 'user' ? styles.userText : styles.aiText}>{item.content}</Text>
+            </View>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>Ask me anything about interview prep, coding concepts, or debugging!</Text>
+            </View>
+          }
+        />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.inputRow}>
+        <View style={[styles.inputRow, { paddingBottom: keyboardVisible ? 12 : 90 }]}>
           <TextInput
             style={styles.input}
             placeholder="Ask your mentor..."
@@ -79,7 +98,7 @@ export default function ChatScreen() {
             multiline
           />
           <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={isSending}>
-            {isSending ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.sendText}>Send</Text>}
+            <Text style={styles.sendText}>Send</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -90,6 +109,7 @@ export default function ChatScreen() {
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: theme.background },
+    flex: { flex: 1 },
     headerBar: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
     title: { fontSize: 22, fontWeight: '700', color: theme.text },
     messageList: { padding: 16, flexGrow: 1, justifyContent: 'flex-end' },
@@ -105,7 +125,6 @@ function createStyles(theme: Theme) {
       alignItems: 'flex-end',
       paddingHorizontal: 16,
       paddingVertical: 12,
-      paddingBottom: 90,
       gap: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.border,

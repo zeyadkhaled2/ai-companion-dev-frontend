@@ -6,7 +6,7 @@ export type AuthStackParamList = {
   Register: undefined;
 };
 export type AppStackParamList = {
-  MainTabs: undefined;
+  Home: undefined;
   QuestionSetup: undefined;
   QuestionDisplay: { question: Question };
   FeedbackScreen: { attempt: Attempt };
