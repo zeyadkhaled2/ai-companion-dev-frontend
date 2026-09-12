@@ -30,7 +30,7 @@ export default function FeedbackScreen() {
         <Text style={styles.buttonText}>Try Another Question</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('MainTabs')}>
+      <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Home')}>
         <Text style={styles.secondaryButtonText}>Back to Home</Text>
       </TouchableOpacity>
     </SafeAreaView>
