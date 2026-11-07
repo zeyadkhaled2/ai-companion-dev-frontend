@@ -1,22 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sendMessageRequest } from '../services/chatApi';
+import { getLatestConversationRequest, sendMessageRequest } from '../services/chatApi';
 import { ChatMessage } from '../types/chatTypes';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../constants/theme';
 import AppHeader from '../components/AppHeader';
 import TypingIndicator from '../components/TypingIndicator';
+import LoadError from '../components/LoadError';
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(true);
+  const [restoreError, setRestoreError] = useState(false);
+  const [sendError, setSendError] = useState(false);
+  const [restoreVersion, setRestoreVersion] = useState(0);
+  const mounted = useRef(true);
+  const sending = useRef(false);
   const theme = useTheme();
   const styles = createStyles(theme);
 
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setIsRestoring(true);
+    setRestoreError(false);
+    getLatestConversationRequest().then(({ conversation }) => {
+      if (!active) return;
+      setConversationId(conversation?.id ?? null);
+      setMessages(conversation ? [...conversation.messages].reverse() : []);
+    }).catch(() => { if (active) setRestoreError(true); })
+      .finally(() => { if (active) setIsRestoring(false); });
+    return () => { active = false; };
+  }, [restoreVersion]);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -32,7 +57,9 @@ export default function ChatScreen() {
   }, []);
   const handleSend = async () => {
     const trimmed = inputText.trim();
-    if (trimmed.length === 0 || isSending) return;
+    if (trimmed.length === 0 || sending.current || isRestoring || restoreError) return;
+    sending.current = true;
+    setSendError(false);
 
     const userMessage: ChatMessage = { id: Date.now().toString(), role: 'user', content: trimmed };
     setMessages((prev) => [userMessage, ...prev]);
@@ -41,21 +68,18 @@ export default function ChatScreen() {
 
     try {
       const result = await sendMessageRequest({ conversationId, message: trimmed });
+      if (!mounted.current) return;
       setConversationId(result.conversationId);
       const aiMessage: ChatMessage = { id: Date.now().toString() + '-ai', role: 'assistant', content: result.reply };
       setMessages((prev) => [aiMessage, ...prev]);
-    } catch (err: any) {
-      console.log('Chat error message:', err.message);
-      console.log('Chat error response status:', err.response?.status);
-      console.log('Chat error response data:', err.response?.data);
-      const errorMessage: ChatMessage = {
-        id: Date.now().toString() + '-error',
-        role: 'assistant',
-        content: 'Sorry, I had trouble responding. Please try again.',
-      };
-      setMessages((prev) => [errorMessage, ...prev]);
+    } catch {
+      if (!mounted.current) return;
+      setMessages(prev => prev.filter(message => message.id !== userMessage.id));
+      setInputText(trimmed);
+      setSendError(true);
     } finally {
-      setIsSending(false);
+      sending.current = false;
+      if (mounted.current) setIsSending(false);
     }
   };
 
@@ -68,7 +92,7 @@ export default function ChatScreen() {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <FlatList
           data={messages}
@@ -81,12 +105,15 @@ export default function ChatScreen() {
               <Text style={item.role === 'user' ? styles.userText : styles.aiText}>{item.content}</Text>
             </View>
           )}
-          ListEmptyComponent={
+          ListEmptyComponent={isRestoring ? <ActivityIndicator color={theme.primary} /> : restoreError ? null :
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>Ask me anything about interview prep, coding concepts, or debugging!</Text>
             </View>
           }
         />
+
+        {restoreError && <LoadError message="Could not restore your conversation. Retry before sending." onRetry={() => setRestoreVersion(value => value + 1)} />}
+        {sendError && <Text accessibilityRole="alert" style={{ color: theme.danger, paddingHorizontal: 16 }}>Message could not be confirmed. Your draft is restored; check your connection before sending again.</Text>}
 
         <View style={[styles.inputRow, { paddingBottom: keyboardVisible ? 12 : 90 }]}>
           <TextInput
@@ -95,9 +122,10 @@ export default function ChatScreen() {
             placeholderTextColor={theme.placeholder}
             value={inputText}
             onChangeText={setInputText}
+            editable={!isSending && !isRestoring && !restoreError}
             multiline
           />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={isSending}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Send message" style={[styles.sendButton, (isSending || isRestoring || restoreError || !inputText.trim()) && { opacity: 0.5 }]} onPress={handleSend} disabled={isSending || isRestoring || restoreError || !inputText.trim()}>
             <Text style={styles.sendText}>Send</Text>
           </TouchableOpacity>
         </View>

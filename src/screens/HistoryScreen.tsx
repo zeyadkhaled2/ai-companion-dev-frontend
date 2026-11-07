@@ -1,33 +1,19 @@
-import { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAttemptsRequest } from '../services/attemptApi';
-import { AttemptWithQuestion } from '../types/attemptTypes';
+import { useFocusedResource } from '../hooks/useFocusedResource';
+import LoadError from '../components/LoadError';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../constants/theme';
 import AppHeader from '../components/AppHeader';
 
 export default function HistoryScreen() {
-  const [attempts, setAttempts] = useState<AttemptWithQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, error, retry } = useFocusedResource(getAttemptsRequest);
+  const attempts = data?.attempts ?? [];
   const theme = useTheme();
   const styles = createStyles(theme);
 
-  useEffect(() => {
-    async function loadAttempts() {
-      try {
-        const result = await getAttemptsRequest();
-        setAttempts(result.attempts);
-      } catch (err) {
-        console.log('Failed to load history', err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadAttempts();
-  }, []);
-
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" color={theme.primary} />
@@ -39,7 +25,11 @@ export default function HistoryScreen() {
     <SafeAreaView style={styles.container}>
       <AppHeader />
       <Text style={styles.title}>History</Text>
+      {error && <LoadError message="Could not load history. Check your connection." onRetry={retry} />}
       <FlatList
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshing={isLoading}
+        onRefresh={retry}
         data={attempts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -49,7 +39,7 @@ export default function HistoryScreen() {
             <Text style={styles.score}>Score: {item.aiScore}/100</Text>
           </View>
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No attempts yet — go answer a question!</Text>}
+        ListEmptyComponent={!error ? <Text style={styles.emptyText}>No attempts yet — go answer a question!</Text> : null}
       />
     </SafeAreaView>
   );

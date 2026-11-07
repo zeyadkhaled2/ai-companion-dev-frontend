@@ -24,11 +24,12 @@ export default function QuestionSetupScreen() {
   const styles = createStyles(theme);
 
   const handleGenerate = async () => {
-    if (!selectedCategory || !selectedDifficulty) return;
+    if (!selectedCategory || !selectedDifficulty || isGenerating) return;
+    setErrorMessage(null);
     setIsGenerating(true);
     try {
       const result = await generateQuestionRequest(selectedCategory, selectedDifficulty);
-      navigation.navigate('QuestionDisplay', { question: result.question });
+      if (navigation.isFocused()) navigation.navigate('QuestionDisplay', { question: result.question });
     } catch (err) {
       console.error(err);
       setErrorMessage("Failed to generate question. Please try again.");
@@ -44,6 +45,9 @@ export default function QuestionSetupScreen() {
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
             key={cat}
+            disabled={isGenerating}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selectedCategory === cat, disabled: isGenerating }}
             style={[styles.chip, selectedCategory === cat && styles.chipSelected]}
             onPress={() => setSelectedCategory(cat)}
           >
@@ -57,6 +61,9 @@ export default function QuestionSetupScreen() {
         {DIFFICULTIES.map((diff) => (
           <TouchableOpacity
             key={diff}
+            disabled={isGenerating}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selectedDifficulty === diff, disabled: isGenerating }}
             style={[styles.chip, selectedDifficulty === diff && styles.chipSelected]}
             onPress={() => setSelectedDifficulty(diff)}
           >

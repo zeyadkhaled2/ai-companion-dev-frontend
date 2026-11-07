@@ -4,17 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   History: 'time-outline',
   Dashboard: 'stats-chart-outline',
-  Home: 'add',
+  Home: 'home-outline',
   Chat: 'chatbubble-ellipses-outline',
   Account: 'person-outline',
 };
 
 export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -34,23 +36,32 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   if (keyboardVisible) return null;
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { bottom: Math.max(24, insets.bottom + 8) }]}>
       <View style={styles.bar}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const isCenter = route.name === 'Home';
-          const onPress = () => { if (!isFocused) navigation.navigate(route.name); };
+          const onPress = () => {
+            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+          };
+          const accessibility = {
+            accessibilityRole: 'tab' as const,
+            accessibilityLabel: route.name,
+            accessibilityState: { selected: isFocused },
+            onLongPress: () => navigation.emit({ type: 'tabLongPress', target: route.key }),
+          };
 
           if (isCenter) {
             return (
-              <TouchableOpacity key={route.key} onPress={onPress} style={styles.centerButton} activeOpacity={0.85}>
+              <TouchableOpacity {...accessibility} key={route.key} onPress={onPress} style={styles.centerButton} activeOpacity={0.85}>
                 <Ionicons name={ICONS[route.name]} size={28} color="#FFFFFF" />
               </TouchableOpacity>
             );
           }
 
           return (
-            <TouchableOpacity key={route.key} onPress={onPress} style={styles.tabItem} activeOpacity={0.6}>
+            <TouchableOpacity {...accessibility} key={route.key} onPress={onPress} style={styles.tabItem} activeOpacity={0.6}>
               <Ionicons name={ICONS[route.name]} size={24} color={isFocused ? theme.primary : theme.textSecondary} />
             </TouchableOpacity>
           );
@@ -68,7 +79,7 @@ function createStyles(theme: Theme) {
       alignItems: 'center', justifyContent: 'space-around',
       shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8,
     },
-    tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    tabItem: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
     centerButton: {
       width: 56, height: 56, borderRadius: 28, backgroundColor: theme.primary,
       alignItems: 'center', justifyContent: 'center', marginTop: -28,

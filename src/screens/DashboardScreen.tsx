@@ -1,41 +1,34 @@
-import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { getStatsRequest } from '../services/attemptApi';
-import { Stats } from '../types/statsTypes';
+import { useFocusedResource } from '../hooks/useFocusedResource';
+import LoadError from '../components/LoadError';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../constants/theme';
 import AppHeader from '../components/AppHeader';
 
-const screenWidth = Dimensions.get('window').width;
+const AXIS_WIDTH = 40;
+const CHART_PADDING = 32;
 
 export default function DashboardScreen() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: stats, isLoading, error, retry } = useFocusedResource(getStatsRequest);
+  const [cardWidth, setCardWidth] = useState(0);
+  const plotWidth = Math.max(0, cardWidth - CHART_PADDING - AXIS_WIDTH - 16);
   const theme = useTheme();
   const styles = createStyles(theme);
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const result = await getStatsRequest();
-        setStats(result);
-      } catch (err) {
-        console.log('Failed to load stats', err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadStats();
-  }, []);
-
-  if (isLoading) {
+  if (isLoading && !stats) {
     return (
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" color={theme.primary} />
       </SafeAreaView>
     );
+  }
+
+  if (error && (!stats || stats.totalAttempts === 0)) {
+    return <SafeAreaView style={styles.centered}><LoadError message="Could not load progress. Check your connection." onRetry={retry} /></SafeAreaView>;
   }
 
   if (!stats || stats.totalAttempts === 0) {
@@ -55,7 +48,8 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} refreshControl={<RefreshControl refreshing={isLoading} onRefresh={retry} tintColor={theme.primary} />}>
+        {error && <LoadError message="Could not refresh progress. Showing the last result." onRetry={retry} />}
         <AppHeader />
         <Text style={styles.title}>Your Progress</Text>
 
@@ -71,10 +65,16 @@ export default function DashboardScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>Score Trend</Text>
-        <View style={styles.chartCard}>
-          <LineChart
+        <View style={styles.chartCard} onLayout={event => setCardWidth(event.nativeEvent.layout.width)}>
+          {plotWidth > 0 && <LineChart
             data={trendData}
-            width={screenWidth - 80}
+            width={plotWidth}
+            yAxisLabelWidth={AXIS_WIDTH}
+            endSpacing={0}
+            rulesLength={plotWidth}
+            rulesColor={theme.border}
+            xAxisColor={theme.border}
+            yAxisColor={theme.border}
             color={theme.primary}
             thickness={3}
             hideDataPoints={false}
@@ -83,14 +83,20 @@ export default function DashboardScreen() {
             xAxisLabelTextStyle={{ color: theme.textSecondary }}
             noOfSections={4}
             maxValue={100}
-          />
+          />}
         </View>
 
         <Text style={styles.sectionTitle}>By Category</Text>
-        <View style={styles.chartCard}>
-          <BarChart
+        <View style={styles.chartCard} onLayout={event => setCardWidth(event.nativeEvent.layout.width)}>
+          {plotWidth > 0 && <BarChart
             data={categoryData}
-            width={screenWidth - 80}
+            width={plotWidth}
+            yAxisLabelWidth={AXIS_WIDTH}
+            endSpacing={0}
+            rulesLength={plotWidth}
+            rulesColor={theme.border}
+            xAxisColor={theme.border}
+            yAxisColor={theme.border}
             barWidth={28}
             spacing={20}
             roundedTop
@@ -98,7 +104,7 @@ export default function DashboardScreen() {
             xAxisLabelTextStyle={{ color: theme.textSecondary, fontSize: 11 }}
             noOfSections={4}
             maxValue={100}
-          />
+          />}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -108,7 +114,7 @@ export default function DashboardScreen() {
 function createStyles(theme: Theme) {
   return StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: theme.background },
-    container: { padding: 16, paddingBottom: 100 },
+    container: { padding: 16, paddingBottom: 140 },
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background, padding: 32 },
     emptyText: { textAlign: 'center', color: theme.textSecondary, fontSize: 15 },
     title: { fontSize: 26, fontWeight: '700', color: theme.text, marginBottom: 16 },
@@ -117,6 +123,6 @@ function createStyles(theme: Theme) {
     statValue: { fontSize: 28, fontWeight: '700', color: theme.primary },
     statLabel: { fontSize: 13, color: theme.textSecondary, marginTop: 4 },
     sectionTitle: { fontSize: 16, fontWeight: '600', color: theme.text, marginBottom: 12 },
-    chartCard: { backgroundColor: theme.card, borderRadius: 14, padding: 16, marginBottom: 24, alignItems: 'center' },
+    chartCard: { backgroundColor: theme.card, borderRadius: 14, padding: 16, marginBottom: 24, overflow: 'hidden' },
   });
 }

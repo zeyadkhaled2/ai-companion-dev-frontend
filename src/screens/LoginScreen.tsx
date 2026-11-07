@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,7 @@ import { AuthStackParamList } from '../navigation/Types';
 import AppHeader from '../components/AppHeader';
 import { useTheme } from '../hooks/useTheme';
 import { Theme } from '../constants/theme';
+import { authErrorMessage } from '../services/apiError';
 
 type LoginScreenNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -31,7 +32,7 @@ export default function LoginScreen() {
     try {
       await login(data);
     } catch (err) {
-      setServerError('Invalid email or password');
+      setServerError(authErrorMessage(err, 'login'));
     } finally {
       setIsSubmitting(false);
     }
@@ -39,8 +40,8 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.container}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           <View style={styles.header}>
             <AppHeader />
             <Text style={styles.eyebrow}>Welcome back</Text>
@@ -100,7 +101,7 @@ export default function LoginScreen() {
           <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? <Text style={styles.footerLink}>Register</Text></Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -110,7 +111,7 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: theme.background },
     flex: { flex: 1 },
-    container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
+    container: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 24 },
     header: { marginBottom: 32 },
     eyebrow: { fontSize: 15, color: theme.textSecondary, marginBottom: 2 },
     title: { fontSize: 30, fontWeight: '700', color: theme.text },

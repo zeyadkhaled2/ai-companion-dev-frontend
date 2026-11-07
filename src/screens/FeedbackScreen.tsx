@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,7 +17,8 @@ export default function FeedbackScreen() {
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={{ flex: 1, backgroundColor: theme.background }}>
+      <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.scoreCircle}>
         <Text style={styles.scoreText}>{attempt.aiScore}</Text>
         <Text style={styles.scoreLabel}>/ 100</Text>
@@ -26,20 +27,21 @@ export default function FeedbackScreen() {
       <Text style={styles.feedbackLabel}>Feedback</Text>
       <Text style={styles.feedbackText}>{attempt.aiFeedback}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('QuestionSetup')}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.popTo('QuestionSetup')}>
         <Text style={styles.buttonText}>Try Another Question</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Home')}>
+      <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.popTo('Tabs', { screen: 'Home' })}>
         <Text style={styles.secondaryButtonText}>Back to Home</Text>
       </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 function createStyles(theme: Theme) {
   return StyleSheet.create({
-    container: { padding: 16, flex: 1, alignItems: 'center', backgroundColor: theme.background },
+    container: { padding: 16, flexGrow: 1, alignItems: 'center', backgroundColor: theme.background },
     scoreCircle: {
       marginTop: 24, width: 140, height: 140, borderRadius: 70, backgroundColor: theme.buttonDark,
       justifyContent: 'center', alignItems: 'center',

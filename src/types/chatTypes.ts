@@ -13,3 +13,7 @@ export type SendMessageResponse = {
   conversationId: string;
   reply: string;
 };
+
+export type ConversationResponse = {
+  conversation: { id: string; messages: ChatMessage[] } | null;
+};

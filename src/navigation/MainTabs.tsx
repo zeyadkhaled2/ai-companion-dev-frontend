@@ -19,6 +19,7 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 export default function MainTabs() {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={{ headerShown: false }}
       tabBar={(props) => <CustomTabBar {...props} />}
     >

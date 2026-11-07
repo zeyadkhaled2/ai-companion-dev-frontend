@@ -1,4 +1,4 @@
-import { SubmitAnswerInput, Attempt } from "../types/attemptTypes";
+import { SubmitAnswerInput, Attempt, AttemptWithQuestion } from "../types/attemptTypes";
 import { apiClient } from "./apiClient";
 import { Stats } from "../types/statsTypes";
 
@@ -6,7 +6,7 @@ export async function submitAnswerRequest (data: SubmitAnswerInput) : Promise<At
   const response = await apiClient.post('/attempts', data);
   return response.data.attempt;
 }
-export async function getAttemptsRequest() {
+export async function getAttemptsRequest(): Promise<{ attempts: AttemptWithQuestion[] }> {
   const response = await apiClient.get('/attempts');
   return response.data;
 }
