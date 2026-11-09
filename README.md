@@ -1,77 +1,67 @@
-# AI Developer Companion — Mobile App
+# AI Developer Companion Mobile
 
-A React Native (Expo) mobile app that helps developers prepare for technical interviews — practice AI-generated questions, get instant AI feedback, track progress over time, and chat with an AI interview mentor.
+Expo SDK 58 / React Native 0.88 app for technical interview practice. Includes ivory/teal and charcoal themes, practice feedback, progress charts, saved mentor conversations, and optional profile photos.
 
-Built as a full-stack portfolio project, paired with a [Node/Express/PostgreSQL backend](<link to backend repo>).
+## Run locally
 
-## Features
+Use Node 24 (also used by CI).
 
-- 🔐 Secure auth (JWT, encrypted on-device token storage)
-- 🎯 Pick a category and difficulty, get an AI-generated interview question
-- ✍️ Submit answers and receive AI-scored feedback (0–100) with actionable suggestions
-- 📊 A progress dashboard with score-trend and category-performance charts
-- 🕓 Full history of past practice attempts
-- 💬 An AI chat mentor for open-ended interview prep questions, with persisted conversation memory
-- 🌗 Full dark mode support, following the system theme
-- 📱 Custom floating tab bar with a native, minimal design language
+1. Start the [backend](https://github.com/zeyadkhaled2/ai-companion-dev-backend).
+2. Run `npm ci`.
+3. Copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_API_URL` including `/api`.
+4. Run `npm start`. Use a compatible Expo Go client, Android emulator, or development build.
 
-## Tech Stack
+Android emulator default: `http://10.0.2.2:3000/api`. iOS simulator default: `http://localhost:3000/api`. For an iPhone or physical Android device, use the development computer's LAN IP and connect both devices to the same network. Use HTTPS for a hosted demo. Restart Expo after changing environment settings.
 
-- **Framework:** React Native (Expo), TypeScript
-- **Navigation:** React Navigation (native stack + bottom tabs, nested navigators)
-- **State:** Zustand (client state), TanStack Query patterns for server state
-- **Forms:** React Hook Form + Zod validation
-- **Networking:** Axios, with interceptors for automatic JWT attachment and session-expiry handling
-- **Charts:** react-native-gifted-charts
-- **Storage:** expo-secure-store (encrypted token storage)
+Only the API URL belongs in client configuration. Gemini keys, database credentials, and JWT signing secrets belong in the backend. `EXPO_PUBLIC_*` values are visible in the shipped app.
 
-## Screens
+## Project map
 
-| Screen | Description |
-|---|---|
-| Login / Register | Validated auth forms |
-| Home | Primary entry point — start a new practice question |
-| Question Setup → Display → Feedback | Core practice loop: pick category/difficulty → answer → get AI feedback |
-| History | List of past attempts with scores |
-| Dashboard | Analytics — score trend and category performance charts |
-| Chat | Multi-turn AI mentor chat |
-| Account | Profile info, logout |
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- Expo CLI (`npx expo`)
-- The [backend API](<link to backend repo>) running locally or deployed
-- Expo Go app (for testing on a physical device) or an Android/iOS emulator
-
-### Setup
-
-```bash
-git clone <this-repo-url>
-cd ai-dev-companion-mobile
-npm install
+```text
+App.tsx                      Safe-area provider and root navigation
+src/
+  app/navigation/            Auth/app stacks, typed routes, animated tabs
+  features/
+    auth/                    Login/register screens, auth API/store/schemas
+    account/                 Profile and logout screen
+    home/                    Practice entry point
+    practice/                Setup, answer, feedback, APIs/types/preferences
+    output/                  Curated JavaScript output puzzles and execution traces
+    progress/                History and dashboard screens, stats types
+    chat/                    Mentor screen, API and message types
+  shared/
+    api/                     Axios client, URL configuration, error messages
+    components/              Avatar, photo picker, loading/error UI
+    hooks/                   Theme and focus-aware resource loading
+    theme/                   Light/dark design tokens
+tests/                       Regression tests with native adapters
+docs/DEVELOPMENT.md           Extension guide and device checklist
 ```
 
-Update the API base URL in `src/services/apiClient.ts` to point to your running backend:
-```typescript
-const API_BASE_URL = 'http://<your-local-ip>:3000/api';
-```
-> Note: `10.0.2.2` works for the Android emulator; a physical device needs your machine's actual local network IP, with both devices on the same Wi-Fi network.
+## Behavior and data
 
-Start the dev server:
-```bash
-npx expo start
-```
+- PostgreSQL stores accounts, profile photos, attempts, and conversations through the API.
+- SecureStore stores the token and session greeting. Greetings rotate after successful login and remain stable during a session.
+- Zustand stores current auth/profile state and practice selections. Practice choices survive navigation, but reset when the app process restarts.
+- `useFocusedResource` reloads history and progress on focus and discards stale results. The app does not currently use TanStack Query for fetching.
+- Auth requests use an independent Axios client to avoid a store/interceptor dependency cycle. The shared authenticated client reads the token and clears matching expired sessions.
+- Photo selection center-crops and resizes to a 256px JPEG. The API accepts at most 300 KB; photos are stored in the user record. Object storage is a future scaling option.
+- Navigation labels remain visible; selection animation respects Reduce Motion. Practice setup scrolls only when content exceeds the available height, including enlarged accessibility text.
 
-Scan the QR code with Expo Go, or press `a` / `i` to launch on an emulator/simulator.
+## Checks
 
-## Architecture Notes
+- `npm run check`: formatting, TypeScript, and regression tests.
+- `npm run format`: format maintained source and tests.
+- `npm run android` / `npm run ios`: start Expo for the target platform.
 
-- **Nested navigators** — a bottom tab navigator (Home, History, Dashboard, Chat, Account) is nested inside a top-level stack navigator, which handles the focused Question → Feedback flow outside the tab bar.
-- **Centralized theming** — a single `theme.ts` defines light/dark color tokens consumed via a `useTheme()` hook across every screen, rather than hardcoded colors, enabling full dark mode support with `useColorScheme()`.
-- **Axios interceptors** — a request interceptor automatically attaches the JWT to every API call from the Zustand auth store; a response interceptor detects expired/invalid tokens (401) and automatically logs the user out, redirecting to the login screen.
+CI runs formatting, TypeScript and tests on pushes and pull requests. Tests cover navigation restoration, focus-loading races/errors, durable logout, and greeting rotation. They make no Gemini calls. Device checks are listed in `docs/DEVELOPMENT.md`.
 
-## Related Repo
+After large file moves, restart Metro with `npx expo start --clear` if its cache still references an old path.
 
-The backend API for this project lives at: `<link to backend repo>`
+## Predict the output
+
+The sixth practice topic is a separate, quota-free JavaScript mode. It includes nine curated puzzles across Easy, Medium, and Hard. Answer choices and execution traces are shipped with the app; no code is evaluated on the device and no Gemini request is made. The Node tests execute only trusted challenge fixtures to verify answers and trace output.
+
+Progress stores the last selected answer per challenge in SecureStore, scoped to the signed-in account on this device. Missed/unseen challenges are prioritized in the next session. Results are separate from AI interview scores and do not sync to the backend.
+
+To add a puzzle, edit `src/features/output/data/challenges.ts`, provide three distinct options and numbered trace steps, and run `npm run check`. Keep examples deterministic and limited to portable JavaScript behavior.

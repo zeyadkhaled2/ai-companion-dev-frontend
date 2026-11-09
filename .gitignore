@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Editor state and local configuration
+.idea/
+.env
+.env.*
+!.env.example

@@ -29,6 +29,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
+      - name: Check formatting
+        run: npm run format:check
       - name: Check TypeScript
         run: npm run typecheck
       - name: Run regression tests
